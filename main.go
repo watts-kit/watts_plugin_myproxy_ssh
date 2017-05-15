@@ -50,9 +50,39 @@ func main() {
 		ActionRevoke:  revoke,
 		ConfigParams: []l.ConfigParamsDescriptor{
 			l.ConfigParamsDescriptor{
-				Name:    "foo",
+				Name:    "myproxy_server",
 				Type:    "string",
-				Default: "bar",
+				Default: "master.data.kit.edu",
+			},
+			l.ConfigParamsDescriptor{
+				Name:    "myproxy_server_pwd",
+				Type:    "string",
+				Default: "",
+			},
+			l.ConfigParamsDescriptor{
+				Name:    "script_path",
+				Type:    "string",
+				Default: "./ssh_trigger.py",
+			},
+			l.ConfigParamsDescriptor{
+				Name:    "remote_script",
+				Type:    "string",
+				Default: "./myproxy_ssh_vm.py",
+			},
+			l.ConfigParamsDescriptor{
+				Name:    "host",
+				Type:    "string",
+				Default: "watts-x509.data.kit.edu",
+			},
+			l.ConfigParamsDescriptor{
+				Name:    "user",
+				Type:    "string",
+				Default: "x509",
+			},
+			l.ConfigParamsDescriptor{
+				Name:    "work_dir",
+				Type:    "string",
+				Default: "/tmp",
 			},
 		},
 		RequestParams: []l.RequestParamsDescriptor{
