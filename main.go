@@ -51,58 +51,57 @@ func request(plugin l.Plugin) l.Output {
 	pi := plugin.PluginInput
 	conf := pi.ConfigParams
 
-	if _, ok := pi.Params["pub_key"]; ok {
-		// TODO
-		return l.PluginError("provided key not implemented")
+	credential := []l.Credential{}
+	var publicKey string
+
+	// if the user has provided a public key we use it instead of generating a key pair
+	if pk, ok := pi.Params["pub_key"]; ok {
+		publicKey = fmt.Sprint(pk)
 	} else {
 		// generate a new key
 		privateKey, publicKey, password := generateKey()
-
-		// prepare parameters for the ssh command
-		linePrefix := fmt.Sprintf("command=\"%s %s %s %s\",no-pty", conf["script_path"],
-			pi.WaTTSUserID, conf["myproxy_server"], conf["myproxy_server_pwd"])
-
-		/* the key needs to be suffixed with:
-		*	a indicator of the inserting instance and the uid
-		 */
-		suffixedPublicKey := fmt.Sprintf("%s %s_%s", publicKey, conf["prefix"], pi.WaTTSUserID)
-		remoteParameter := pi
-		remoteParameter.Params = map[string]interface{}{
-			"key_prefix": linePrefix,
-			"pub_key":    suffixedPublicKey,
-			"state":      pi.CredentialState,
+		credential = []l.Credential{
+			l.Credential{Name: "private key", Type: "string", Value: privateKey},
+			l.Credential{Name: "public key", Type: "string", Value: publicKey},
+			l.Credential{Name: "password", Type: "string", Value: password},
 		}
-		parameterBytes, err := json.Marshal(remoteParameter)
-		l.Check(err, 1, "marshaling remote script parameter")
-		encodedScriptParameter := base64url.Encode(parameterBytes)
-		sshTarget := fmt.Sprintf("%s@%s", conf["user"], conf["host"])
-
-		// execute the ssh command
-		cmd := exec.Command("ssh", sshTarget, conf["remote_script"].(string), encodedScriptParameter)
-		var out bytes.Buffer
-		cmd.Stdout = &out
-		err = cmd.Run()
-		l.Check(err, 1, "executing ssh command")
-
-		// checking the output of the ssh command
-		var sshCmdOutput map[string]string
-		err = json.Unmarshal(out.Bytes(), &sshCmdOutput)
-		l.Check(err, 1, "unmarshaling output of ssh command")
-
-		if result, ok := sshCmdOutput["result"]; ok && result == "ok" {
-			credential := []l.Credential{
-				l.Credential{Name: "private key", Type: "string", Value: privateKey},
-				l.Credential{Name: "public key", Type: "string", Value: publicKey},
-				l.Credential{Name: "password", Type: "string", Value: password},
-			}
-			credentialState := "registerred"
-			return l.PluginGoodRequest(credential, credentialState)
-		}
-		if logMsg, ok := sshCmdOutput["log_msg"]; ok {
-			return l.PluginError(logMsg)
-		}
-		return l.PluginError("request failed")
 	}
+
+	// prepare parameters for the ssh command
+	linePrefix := fmt.Sprintf("command=\"%s %s %s %s\",no-pty", conf["script_path"],
+		pi.WaTTSUserID, conf["myproxy_server"], conf["myproxy_server_pwd"])
+
+	suffixedPublicKey := fmt.Sprintf("%s %s_%s", publicKey, conf["prefix"], pi.WaTTSUserID)
+	pi.Params = map[string]interface{}{
+		"key_prefix": linePrefix,
+		"pub_key":    suffixedPublicKey,
+		"state":      pi.CredentialState,
+	}
+	parameterBytes, err := json.Marshal(pi)
+	l.Check(err, 1, "marshaling remote script parameter")
+
+	encodedScriptParameter := base64url.Encode(parameterBytes)
+	sshTarget := fmt.Sprintf("%s@%s", conf["user"], conf["host"])
+
+	// execute the ssh command
+	cmd := exec.Command("ssh", sshTarget, conf["remote_script"].(string), encodedScriptParameter)
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	err = cmd.Run()
+	l.Check(err, 1, "executing ssh command")
+
+	// checking the output of the ssh command
+	var sshCmdOutput map[string]string
+	err = json.Unmarshal(out.Bytes(), &sshCmdOutput)
+	l.Check(err, 1, "unmarshaling output of ssh command")
+
+	if result, ok := sshCmdOutput["result"]; ok && result == "ok" {
+		return l.PluginGoodRequest(credential, "registerred")
+	}
+	if logMsg, ok := sshCmdOutput["log_msg"]; ok {
+		return l.PluginError(logMsg)
+	}
+	return l.PluginError("request failed")
 }
 
 func revoke(plugin l.Plugin) l.Output {
