@@ -2,50 +2,13 @@ package main
 
 import (
 	"bytes"
-	"crypto/rand"
-	"crypto/rsa"
-	"crypto/x509"
 	"encoding/json"
-	"encoding/pem"
 	"fmt"
 	l "git.scc.kit.edu/lukasburgey/wattsPluginLib"
+	"git.scc.kit.edu/lukasburgey/wattsPluginLib/sshKeyGen"
 	"github.com/kalaspuffar/base64url"
-	keygen "github.com/night-codes/go-keygen"
-	"golang.org/x/crypto/ssh"
 	"os/exec"
 )
-
-const (
-	rsaBits           = 4096
-	rsaPasswordLength = 16
-)
-
-func generateKey() (privateKey string, publicKey string, password string) {
-	rsaPrivateKey, err := rsa.GenerateKey(rand.Reader, rsaBits)
-	l.Check(err, 1, "rsa private key generation")
-
-	pemBlock := &pem.Block{
-		Type:  "RSA PRIVATE KEY",
-		Bytes: x509.MarshalPKCS1PrivateKey(rsaPrivateKey),
-	}
-	if rsaPasswordLength > 0 {
-		password = keygen.NewPass(rsaPasswordLength)
-		pemBlock, err = x509.EncryptPEMBlock(
-			rand.Reader, pemBlock.Type, pemBlock.Bytes, []byte(password), x509.PEMCipherAES256)
-		l.Check(err, 1, "encrypting pem block")
-	}
-
-	sshPublicKey, err := ssh.NewPublicKey(&rsaPrivateKey.PublicKey)
-	l.Check(err, 1, "ssh public key generation")
-
-	privateKeyPEM := pem.EncodeToMemory(pemBlock)
-	publicKeyAuthKey := ssh.MarshalAuthorizedKey(sshPublicKey)
-
-	// removing a trailing newline here
-	privateKey = string(privateKeyPEM[:len(privateKeyPEM)-1])
-	publicKey = string(publicKeyAuthKey[:len(publicKeyAuthKey)-1])
-	return
-}
 
 func request(pi l.PluginInput, conf map[string]interface{}, params map[string]interface{}) l.Output {
 
@@ -57,7 +20,8 @@ func request(pi l.PluginInput, conf map[string]interface{}, params map[string]in
 		publicKey = fmt.Sprint(pk)
 	} else {
 		// generate a new key
-		privateKey, publicKey, password := generateKey()
+		privateKey, publicKey, password, err := sshKeyGen.GenerateKey(4096, 16)
+		l.Check(err, 1, "ssh keypair generation")
 		credential = []l.Credential{
 			l.Credential{Name: "private key", Type: "string", Value: privateKey},
 			l.Credential{Name: "public key", Type: "string", Value: publicKey},
