@@ -25,11 +25,11 @@ def insert_ssh_key(KeyPrefix, Key, State):
     return {'result': 'ok'}
 
 
+# TODO sanitize authorized_keys file
+# idea: a user gets keys from multiple instances
+#
+# maybe split the authorized_keys file into multiple files and concat them
 def revoke_ssh(UserName, State):
-    return delete_ssh_for(UserName, State)
-
-
-def delete_ssh_for(UserName, State):
     LogMsg = "removal of public key failed: the cmd '%s' failed with %d"
     AuthorizedFile = os.path.expanduser(os.path.join(".ssh", "authorized_keys"))
     BackupFile = "%s%s" % (AuthorizedFile, ".backup")
@@ -64,21 +64,18 @@ def main():
 
         # general information
         Action = JObject['action']
-        if Action == "parameter":
-            pass
-        else:
-            State = JObject['cred_state']
-            global UserName
-            UserName = JObject['watts_userid']
-            Params = JObject['params']
+        State = JObject['cred_state']
+        global UserName
+        UserName = JObject['watts_userid']
+        Params = JObject['params']
 
-            if Action == "request":
-                KeyPrefix = Params['key_prefix']
-                PubKey = Params['pub_key']
-                InState = Params['state']
-                print(json.dumps(insert_ssh_key(KeyPrefix, PubKey, InState)))
-            elif Action == "revoke":
-                print(json.dumps(revoke_ssh(UserName, State)))
+        if Action == "request":
+            KeyPrefix = Params['key_prefix']
+            PubKey = Params['pub_key']
+            InState = Params['state']
+            print(json.dumps(insert_ssh_key(KeyPrefix, PubKey, InState)))
+        elif Action == "revoke":
+            print(json.dumps(revoke_ssh(UserName, State)))
 
     except Exception as E:
         TraceBack = traceback.format_exc(),
