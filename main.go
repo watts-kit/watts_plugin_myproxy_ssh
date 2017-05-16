@@ -47,9 +47,7 @@ func generateKey() (privateKey string, publicKey string, password string) {
 	return
 }
 
-func request(plugin l.Plugin) l.Output {
-	pi := plugin.PluginInput
-	conf := pi.ConfigParams
+func request(pi l.PluginInput, conf map[string]interface{}, params map[string]interface{}) l.Output {
 
 	credential := []l.Credential{}
 	var publicKey string
@@ -104,10 +102,7 @@ func request(plugin l.Plugin) l.Output {
 	return l.PluginError("request failed")
 }
 
-func revoke(plugin l.Plugin) l.Output {
-	pi := plugin.PluginInput
-	conf := pi.ConfigParams
-
+func revoke(pi l.PluginInput, conf map[string]interface{}, params map[string]interface{}) l.Output {
 	parameterBytes, err := json.Marshal(pi)
 	l.Check(err, 1, "marshaling parameter for remote script")
 
