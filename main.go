@@ -22,7 +22,7 @@ const (
 	letterIdxMask     = 1<<letterIdxBits - 1 // All 1-bits, as many as letterIdxBits
 	letterIdxMax      = 63 / letterIdxBits
 	rsaBits           = 4096
-	rsaPasswordLength = 1
+	rsaPasswordLength = 16
 )
 
 // http://stackoverflow.com/questions/22892120/how-to-generate-a-random-string-of-a-fixed-length-in-golang
@@ -49,17 +49,27 @@ func generateKey() (privateKey string, publicKey string, password string) {
 	rsaPrivateKey, err := rsa.GenerateKey(rand.Reader, rsaBits)
 	l.Check(err, 1, "rsa private key generation")
 
-	pkcs1 := x509.MarshalPKCS1PrivateKey(rsaPrivateKey)
-	passwordBytes := randStringBytesMaskImprSrc(rsaPasswordLength)
-	encryptedPemBlock, err := x509.EncryptPEMBlock(
-		rand.Reader, "RSA PRIVAT KEY", pkcs1, passwordBytes, x509.PEMCipherAES256)
-	l.Check(err, 1, "encrypting pem block")
+	passwordBytes := []byte{}
+	pemBlock := &pem.Block{
+		Type:  "RSA PRIVATE KEY",
+		Bytes: x509.MarshalPKCS1PrivateKey(rsaPrivateKey),
+	}
+	if rsaPasswordLength > 0 {
+		passwordBytes = randStringBytesMaskImprSrc(rsaPasswordLength)
+		pemBlock, err = x509.EncryptPEMBlock(
+			rand.Reader, pemBlock.Type, pemBlock.Bytes, passwordBytes, x509.PEMCipherAES256)
+		l.Check(err, 1, "encrypting pem block")
+	}
 
 	sshPublicKey, err := ssh.NewPublicKey(&rsaPrivateKey.PublicKey)
 	l.Check(err, 1, "ssh public key generation")
 
-	privateKey = string(pem.EncodeToMemory(encryptedPemBlock))
-	publicKey = string(ssh.MarshalAuthorizedKey(sshPublicKey))
+	privateKeyPEM := pem.EncodeToMemory(pemBlock)
+	publicKeyAuthKey := ssh.MarshalAuthorizedKey(sshPublicKey)
+
+	// removing a trailing newline here
+	privateKey = string(privateKeyPEM[:len(privateKeyPEM)-1])
+	publicKey = string(publicKeyAuthKey[:len(publicKeyAuthKey)-1])
 	password = string(passwordBytes)
 	return
 }
