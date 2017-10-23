@@ -10,7 +10,7 @@ import (
 	"os/exec"
 )
 
-func request(pi l.PluginInput, conf map[string]interface{}, params map[string]interface{}) l.Output {
+func request(pi l.Input) l.Output {
 
 	credential := []l.Credential{}
 	var publicKey string
@@ -23,17 +23,17 @@ func request(pi l.PluginInput, conf map[string]interface{}, params map[string]in
 		privateKey, publicKey, password, err := sshKeyGen.GenerateKey(4096, 16)
 		l.Check(err, 1, "ssh keypair generation")
 		credential = []l.Credential{
-			l.Credential{Name: "private key", Type: "string", Value: privateKey},
-			l.Credential{Name: "public key", Type: "string", Value: publicKey},
-			l.Credential{Name: "password", Type: "string", Value: password},
+			l.Credential{"name": "private key", "type": "string", "value": privateKey},
+			l.Credential{"name": "public key", "type": "string", "value": publicKey},
+			l.Credential{"name": "password", "type": "string", "value": password},
 		}
 	}
 
 	// prepare parameters for the ssh command
-	linePrefix := fmt.Sprintf("command=\"%s %s %s %s\",no-pty", conf["script_path"],
-		pi.WaTTSUserID, conf["myproxy_server"], conf["myproxy_server_pwd"])
+	linePrefix := fmt.Sprintf("command=\"%s %s %s %s\",no-pty", pi.Conf["script_path"],
+		pi.WaTTSUserID, pi.Conf["myproxy_server"], pi.Conf["myproxy_server_pwd"])
 
-	suffixedPublicKey := fmt.Sprintf("%s %s_%s", publicKey, conf["prefix"], pi.WaTTSUserID)
+	suffixedPublicKey := fmt.Sprintf("%s %s_%s", publicKey, pi.Conf["prefix"], pi.WaTTSUserID)
 	pi.Params = map[string]interface{}{
 		"key_prefix": linePrefix,
 		"pub_key":    suffixedPublicKey,
@@ -43,10 +43,10 @@ func request(pi l.PluginInput, conf map[string]interface{}, params map[string]in
 	l.Check(err, 1, "marshaling remote script parameter")
 
 	encodedScriptParameter := base64url.Encode(parameterBytes)
-	sshTarget := fmt.Sprintf("%s@%s", conf["user"], conf["host"])
+	sshTarget := fmt.Sprintf("%s@%s", pi.Conf["user"], pi.Conf["host"])
 
 	// execute the ssh command
-	cmd := exec.Command("ssh", sshTarget, conf["remote_script"].(string), encodedScriptParameter)
+	cmd := exec.Command("ssh", sshTarget, pi.Conf["remote_script"].(string), encodedScriptParameter)
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	err = cmd.Run()
@@ -66,15 +66,15 @@ func request(pi l.PluginInput, conf map[string]interface{}, params map[string]in
 	return l.PluginError("request failed")
 }
 
-func revoke(pi l.PluginInput, conf map[string]interface{}, params map[string]interface{}) l.Output {
+func revoke(pi l.Input) l.Output {
 	parameterBytes, err := json.Marshal(pi)
 	l.Check(err, 1, "marshaling parameter for remote script")
 
 	encodedScriptParameter := base64url.Encode(parameterBytes)
-	sshTarget := fmt.Sprintf("%s@%s", conf["user"], conf["host"])
+	sshTarget := fmt.Sprintf("%s@%s", pi.Conf["user"], pi.Conf["host"])
 
 	// execute the ssh command
-	cmd := exec.Command("ssh", sshTarget, conf["remote_script"].(string), encodedScriptParameter)
+	cmd := exec.Command("ssh", sshTarget, pi.Conf["remote_script"].(string), encodedScriptParameter)
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	err = cmd.Run()
@@ -98,8 +98,10 @@ func main() {
 	pluginDescriptor := l.PluginDescriptor{
 		Version:       "0.1.0",
 		Author:        "Lukas Burgey @ KIT within the INDIGO DataCloud Project",
-		ActionRequest: request,
-		ActionRevoke:  revoke,
+		Actions: map[string]l.Action{
+			"request": request,
+			"revoke": revoke,
+		},
 		ConfigParams: []l.ConfigParamsDescriptor{
 			l.ConfigParamsDescriptor{Name: "myproxy_server", Type: "string", Default: "master.data.kit.edu"},
 			l.ConfigParamsDescriptor{Name: "myproxy_server_pwd", Type: "string", Default: ""},
