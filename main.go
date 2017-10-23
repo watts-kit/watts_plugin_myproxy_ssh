@@ -30,11 +30,18 @@ func request(pi l.Input) l.Output {
 		}
 	}
 
+	credential = append(
+		credential,
+		l.AutoCredential("retrieval host", fmt.Sprintf("%s@%s",
+			pi.Conf["user"],
+			pi.Conf["host"])))
+
 	// prepare parameters for the ssh command
 	linePrefix := fmt.Sprintf("command=\"%s %s %s %s\",no-pty", pi.Conf["script_path"],
 		pi.WaTTSUserID, pi.Conf["myproxy_server"], pi.Conf["myproxy_server_pwd"])
 
-	suffixedPublicKey := fmt.Sprintf("%s %s_%s", publicKey, pi.Conf["prefix"], pi.WaTTSUserID)
+	sshComment := fmt.Sprintf("%s_%s", pi.Conf["prefix"], pi.WaTTSUserID)
+	suffixedPublicKey := fmt.Sprintf("%s %s", publicKey, sshComment)
 	pi.Params = map[string]interface{}{
 		"key_prefix": linePrefix,
 		"pub_key":    suffixedPublicKey,
@@ -63,7 +70,7 @@ func request(pi l.Input) l.Output {
 	l.Check(err, 1, "unmarshaling output of ssh command")
 
 	if result, ok := sshCmdOutput["result"]; ok && result == "ok" {
-		return l.PluginGoodRequest(credential, "registerred")
+		return l.PluginGoodRequest(credential, sshComment)
 	}
 	if logMsg, ok := sshCmdOutput["log_msg"]; ok {
 		return l.PluginError(logMsg)
@@ -78,7 +85,6 @@ func revoke(pi l.Input) l.Output {
 	encodedScriptParameter := base64url.Encode(parameterBytes)
 	sshTarget := fmt.Sprintf("%s@%s", pi.Conf["user"], pi.Conf["host"])
 
-	// execute the ssh command
 	// execute the ssh command
 	remoteScript, ok := pi.Conf["remote_script"].(string)
 	l.CheckOk(ok, 1, "Conf remote_script is no string")
@@ -104,11 +110,11 @@ func revoke(pi l.Input) l.Output {
 
 func main() {
 	pluginDescriptor := l.PluginDescriptor{
-		Version:       "0.1.0",
-		Author:        "Lukas Burgey @ KIT within the INDIGO DataCloud Project",
+		Version: "0.1.0",
+		Author:  "Lukas Burgey @ KIT within the INDIGO DataCloud Project",
 		Actions: map[string]l.Action{
 			"request": request,
-			"revoke": revoke,
+			"revoke":  revoke,
 		},
 		ConfigParams: []l.ConfigParamsDescriptor{
 			l.ConfigParamsDescriptor{Name: "myproxy_server", Type: "string", Default: "master.data.kit.edu"},
