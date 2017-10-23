@@ -1,0 +1,54 @@
+{
+	"exec_file": "./wattsPluginMyproxySSH",
+	"tests" : [
+		{
+			"input": {
+				"action": "request",
+				"conf_params": {
+					"host": "watts-x509.data.kit.edu",
+					"myproxy_server": "master.data.kit.edu",
+					"myproxy_server_pwd": "",
+					"script_path": "/home/x509/myproxy_get_cert.py",
+					"remote_script": "/home/x509/myproxy_ssh_vm.py",
+					"user": "x509",
+					"prefix": "test",
+					"work_dir": "/tmp"
+				},
+				"params": {},
+				"user_info": {
+					"iss": "https://issuer.example.com",
+					"sub": "123456789"
+				},
+				"watts_version": "1.0.0"
+			},
+			"expected_output": {
+				"result": "ok",
+				"credential": []
+			}
+		},
+		{
+			"input": {
+				"action": "revoke",
+				"conf_params": {
+					"host": "watts-x509.data.kit.edu",
+					"myproxy_server": "master.data.kit.edu",
+					"myproxy_server_pwd": "",
+					"script_path": "/home/x509/myproxy_get_cert.py",
+					"remote_script": "/home/x509/myproxy_ssh_vm.py",
+					"user": "x509",
+					"prefix": "test",
+					"work_dir": "/tmp"
+				},
+				"params": {},
+				"user_info": {
+					"iss": "https://issuer.example.com",
+					"sub": "123456789"
+				},
+				"watts_version": "1.0.0"
+			},
+			"expected_output": {
+				"result": "ok"
+			}
+		}
+	]
+}

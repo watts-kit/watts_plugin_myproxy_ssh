@@ -1,0 +1,56 @@
+{
+	"exec_file": "./wattsPluginMyproxySSH",
+	"tests" : [
+		{
+			"input": {
+				"action": "request",
+				"conf_params": {
+					"host": "watts-x509.data.kit.edu",
+					"myproxy_server": "master.data.kit.edu",
+					"myproxy_server_pwd": "",
+					"script_path": "/home/x509/myproxy_get_cert.py",
+					"remote_script": "/home/x509/myproxy_ssh_vm.py",
+					"user": "x509",
+					"prefix": "test",
+					"work_dir": "/tmp"
+				},
+				"params": {
+					"pub_key": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC+0LDO2YqAw/EYunPVzE97yInfhrsmcdxRZGjSraCWVHjxzR9Fn6DmMzpVZ5WcncehMRPA1FihM3Hq6Kla/hT3rmylpcRUog3NrlGV2EiP06YooWuILCzUasT2B0bUTxXr7xRIYT2hP66tpoqIlHUlaeTQOOsaNa/HIudmoCeRPOCo+zBjxXxumWrIjhKA5CH4M5vlmRWsGcqGBOPi6NOcfQnyTFgN63VXkcGVdwcE8cPkJeg48XBkY2jfph0xClBopu8Pe016qcdtcPmXasWFKKiI9QdWxP+YkTf9+VqoVq7Tr9HTfcPrkmvLKTOt7fkKPGpD608mWH8aWWO4TO0leyJpc3N1ZXIiOiJodHRwczpcL1wvaXNzdWVyLmV4YW1wbGUuY29tIiwic3ViamVjdCI6IjEyMzQ1Njc4OSJ9"
+				},
+				"user_info": {
+					"iss": "https://issuer.example.com",
+					"sub": "123456789"
+				},
+				"watts_version": "1.0.0"
+			},
+			"expected_output": {
+				"result": "ok",
+				"credential": []
+			}
+		},
+		{
+			"input": {
+				"action": "revoke",
+				"conf_params": {
+					"host": "watts-x509.data.kit.edu",
+					"myproxy_server": "master.data.kit.edu",
+					"myproxy_server_pwd": "",
+					"script_path": "/home/x509/myproxy_get_cert.py",
+					"remote_script": "/home/x509/myproxy_ssh_vm.py",
+					"user": "x509",
+					"prefix": "test",
+					"work_dir": "/tmp"
+				},
+				"params": {},
+				"user_info": {
+					"iss": "https://issuer.example.com",
+					"sub": "123456789"
+				},
+				"watts_version": "1.0.0"
+			},
+			"expected_output": {
+				"result": "ok"
+			}
+		}
+	]
+}
