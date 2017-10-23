@@ -20,12 +20,13 @@ func request(pi l.Input) l.Output {
 		publicKey = fmt.Sprint(pk)
 	} else {
 		// generate a new key
-		privateKey, publicKey, password, err := sshKeyGen.GenerateKey(4096, 16)
+		privateKey, pk, password, err := sshKeyGen.GenerateKey(4096, 16)
+		publicKey = pk
 		l.Check(err, 1, "ssh keypair generation")
 		credential = []l.Credential{
-			l.Credential{"name": "private key", "type": "string", "value": privateKey},
-			l.Credential{"name": "public key", "type": "string", "value": publicKey},
-			l.Credential{"name": "password", "type": "string", "value": password},
+			l.AutoCredential("private_key", privateKey),
+			l.AutoCredential("public_key", publicKey),
+			l.AutoCredential("password", password),
 		}
 	}
 
@@ -46,7 +47,11 @@ func request(pi l.Input) l.Output {
 	sshTarget := fmt.Sprintf("%s@%s", pi.Conf["user"], pi.Conf["host"])
 
 	// execute the ssh command
-	cmd := exec.Command("ssh", sshTarget, pi.Conf["remote_script"].(string), encodedScriptParameter)
+	remoteScript, ok := pi.Conf["remote_script"].(string)
+	l.CheckOk(ok, 1, "Conf remote_script is no string")
+
+	cmd := exec.Command("ssh", sshTarget, remoteScript, encodedScriptParameter)
+
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	err = cmd.Run()
@@ -74,7 +79,10 @@ func revoke(pi l.Input) l.Output {
 	sshTarget := fmt.Sprintf("%s@%s", pi.Conf["user"], pi.Conf["host"])
 
 	// execute the ssh command
-	cmd := exec.Command("ssh", sshTarget, pi.Conf["remote_script"].(string), encodedScriptParameter)
+	// execute the ssh command
+	remoteScript, ok := pi.Conf["remote_script"].(string)
+	l.CheckOk(ok, 1, "Conf remote_script is no string")
+	cmd := exec.Command("ssh", sshTarget, remoteScript, encodedScriptParameter)
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	err = cmd.Run()
