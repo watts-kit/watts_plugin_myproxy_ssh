@@ -8,6 +8,7 @@ import (
 	"git.scc.kit.edu/lukasburgey/wattsPluginLib/sshKeyGen"
 	"github.com/kalaspuffar/base64url"
 	"os/exec"
+	"strings"
 )
 
 func request(pi l.Input) l.Output {
@@ -17,7 +18,24 @@ func request(pi l.Input) l.Output {
 
 	// if the user has provided a public key we use it instead of generating a key pair
 	if pk, ok := pi.Params["pub_key"]; ok {
-		publicKey = fmt.Sprint(pk)
+		rawPublicKey, ok := pk.(string)
+		l.CheckOk(ok, 1, "pub_key is no string")
+
+		// parse the public key
+		keyElements := strings.Split(rawPublicKey, " ")
+		switch len(keyElements) {
+		case 2:
+			// case key-type + key
+			publicKey = rawPublicKey
+		case 3:
+			// case key-type + key + comment
+			publicKey = fmt.Sprintf("%s %s", keyElements[0], keyElements[1])
+		default:
+			l.PluginUserError(
+				fmt.Sprintf("Cannot parse user provided public key (e = %v)", len(keyElements)),
+				"Unable to parse the provided ssh public key",
+			)
+		}
 	} else {
 		// generate a new key
 		privateKey, pk, password, err := sshKeyGen.GenerateKey(4096, 16)
@@ -37,10 +55,10 @@ func request(pi l.Input) l.Output {
 			pi.Conf["host"])))
 
 	// prepare parameters for the ssh command
-	linePrefix := fmt.Sprintf("command=\"%s %s %s %s\",no-pty", pi.Conf["script_path"],
-		pi.WaTTSUserID, pi.Conf["myproxy_server"], pi.Conf["myproxy_server_pwd"])
-
 	sshComment := fmt.Sprintf("%s_%s", pi.Conf["prefix"], pi.WaTTSUserID)
+	linePrefix := fmt.Sprintf("command=\"%s %s %s %s\",no-pty", pi.Conf["script_path"],
+		sshComment, pi.Conf["myproxy_server"], pi.Conf["myproxy_server_pwd"])
+
 	suffixedPublicKey := fmt.Sprintf("%s %s", publicKey, sshComment)
 	pi.Params = map[string]interface{}{
 		"key_prefix": linePrefix,
@@ -119,7 +137,7 @@ func main() {
 		ConfigParams: []l.ConfigParamsDescriptor{
 			l.ConfigParamsDescriptor{Name: "myproxy_server", Type: "string", Default: "master.data.kit.edu"},
 			l.ConfigParamsDescriptor{Name: "myproxy_server_pwd", Type: "string", Default: ""},
-			l.ConfigParamsDescriptor{Name: "script_path", Type: "string", Default: "./ssh_trigger.py"},
+			l.ConfigParamsDescriptor{Name: "script_path", Type: "string", Default: "./myproxy_get_cert.py"},
 			l.ConfigParamsDescriptor{Name: "remote_script", Type: "string", Default: "./myproxy_ssh_vm.py"},
 			l.ConfigParamsDescriptor{Name: "host", Type: "string", Default: "watts-x509.data.kit.edu"},
 			l.ConfigParamsDescriptor{Name: "user", Type: "string", Default: "x509"},
