@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	l "git.scc.kit.edu/lukasburgey/wattsPluginLib"
-	"git.scc.kit.edu/lukasburgey/wattsPluginLib/sshKeyGen"
 	"github.com/kalaspuffar/base64url"
 	"os/exec"
 	"strings"
@@ -35,16 +34,6 @@ func request(pi l.Input) l.Output {
 				fmt.Sprintf("Cannot parse user provided public key (e = %v)", len(keyElements)),
 				"Unable to parse the provided ssh public key",
 			)
-		}
-	} else {
-		// generate a new key
-		privateKey, pk, password, err := sshKeyGen.GenerateKey(4096, 16)
-		publicKey = pk
-		l.Check(err, 1, "ssh keypair generation")
-		credential = []l.Credential{
-			l.AutoCredential("private_key", privateKey),
-			l.AutoCredential("public_key", publicKey),
-			l.AutoCredential("password", password),
 		}
 	}
 
@@ -146,7 +135,7 @@ func main() {
 		RequestParams: []l.RequestParamsDescriptor{
 			l.RequestParamsDescriptor{
 				Key: "pub_key", Name: "public key", Description: "the public key of the service", Type: "textarea",
-				Mandatory: false},
+				Mandatory: true},
 		},
 	}
 	l.PluginRun(pluginDescriptor)
