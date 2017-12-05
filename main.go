@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	l "git.scc.kit.edu/lukasburgey/wattsPluginLib"
+	l "github.com/watts-kit/wattsPluginLib"
 )
 
 const (
