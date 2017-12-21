@@ -32,7 +32,6 @@ func request(pi l.Input) l.Output {
 		pi.Conf["script_path"],
 		uid,
 		pi.Conf["myproxy_server"],
-		pi.Conf["myproxy_server_pwd"],
 		publicKey)
 
 	h.RunSSHCommand("echo", newLine, ">>", authorizedKeyFile)
@@ -61,7 +60,6 @@ func main() {
 		},
 		ConfigParams: []l.ConfigParamsDescriptor{
 			l.ConfigParamsDescriptor{Name: "myproxy_server", Type: "string", Default: "master.data.kit.edu"},
-			l.ConfigParamsDescriptor{Name: "myproxy_server_pwd", Type: "string", Default: ""},
 			l.ConfigParamsDescriptor{Name: "script_path", Type: "string", Default: "./getCert"},
 			l.ConfigParamsDescriptor{Name: "host", Type: "string", Default: "watts-x509.data.kit.edu"},
 			l.ConfigParamsDescriptor{Name: "user", Type: "string", Default: "x509"},
