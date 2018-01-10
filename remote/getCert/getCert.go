@@ -23,7 +23,7 @@ func main() {
 
     password, pwdc_err := passwordclib.GetPassword("myproxy_server_pwd")
     if pwdc_err != nil {
-        fmt.Printf ("error. You should add 'myproxy_server_pwd' to passwordd, for example with ----passwordc set myproxy_server_pwd-------- %s", pwdc_err)
+        fmt.Printf ("error. The WaTTS admin should add 'myproxy_server_pwd' to passwordd %s", pwdc_err)
         panic(pwdc_err)
     }
 	kingpin.MustParse(app.Parse(os.Args[1:]))
@@ -32,7 +32,13 @@ func main() {
 	cmd.Stdin = strings.NewReader(password)
 
 	output, err := cmd.CombinedOutput()
-	kingpin.FatalIfError(err, string(output))
-
-	fmt.Println(string(output))
+    if err != nil {
+        if strings.EqualFold(string(output)[:30], "Failed to receive credentials.") {
+            fmt.Println("\n\nNo credentials available for you.\nGenerate some using https://watts.lifescienceid.org\n\n")
+        } else {
+            kingpin.FatalIfError(err, string(output))
+        }
+    } else {
+        fmt.Println(string(output))
+    }
 }
