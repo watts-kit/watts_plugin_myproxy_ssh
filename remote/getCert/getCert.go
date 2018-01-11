@@ -29,6 +29,7 @@ func main() {
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 
 	cmd := exec.Command("myproxy-logon", "-l", *wattsUID, "-s", *host, "-S", "-o", "-")
+    //myproxy-logon -l marcus -s watts-myproxy.lifescienceid.org -S-o -
 	cmd.Stdin = strings.NewReader(password)
 
 	output, err := cmd.CombinedOutput()
