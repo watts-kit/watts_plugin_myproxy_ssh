@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	github.com/watts-kit/wattsPluginLib"
+	l "github.com/watts-kit/wattsPluginLib"
 	//l "../wattsPluginLib"
 )
 
@@ -29,10 +29,11 @@ func request(pi l.Input) l.Output {
 	h.RunSSHCommand("cp", authorizedKeyFile, authorizedKeyFile+".bak")
 
 	uid := fmt.Sprintf("%s_%s", pi.Conf["prefix"], pi.WaTTSUserID)
-	newLine := fmt.Sprintf("command=\\\"%s %s %s\\\",no-pty %s",
+	newLine := fmt.Sprintf("command=\\\"%s %s %s %s\\\",no-pty %s",
 		pi.Conf["script_path"],
 		uid,
 		pi.Conf["myproxy_server"],
+		pi.Conf["myproxy_server_pwd_key"],
 		publicKey)
 
 	h.RunSSHCommand("echo", newLine, ">>", authorizedKeyFile)
