@@ -2,7 +2,8 @@ package main
 
 import (
 	"fmt"
-    l "github.com/watts-kit/wattsPluginLib"
+
+	github.com/watts-kit/wattsPluginLib"
 	//l "../wattsPluginLib"
 )
 
@@ -22,11 +23,10 @@ func request(pi l.Input) l.Output {
 	if output != "" {
 		l.PluginUserError(
 			fmt.Sprint("err:", err, "output:", output),
-			"This public key is already used",)
+			"This public key is already used")
 	}
 
 	h.RunSSHCommand("cp", authorizedKeyFile, authorizedKeyFile+".bak")
-
 
 	uid := fmt.Sprintf("%s_%s", pi.Conf["prefix"], pi.WaTTSUserID)
 	newLine := fmt.Sprintf("command=\\\"%s %s %s\\\",no-pty %s",
@@ -63,6 +63,7 @@ func main() {
 			l.ConfigParamsDescriptor{Name: "myproxy_server", Type: "string", Default: "master.data.kit.edu"},
 			l.ConfigParamsDescriptor{Name: "script_path", Type: "string", Default: "./getCert"},
 			l.ConfigParamsDescriptor{Name: "host", Type: "string", Default: "watts-x509.data.kit.edu"},
+			l.ConfigParamsDescriptor{Name: "display_host", Type: "string", Default: "watts-x509.data.kit.edu"},
 			l.ConfigParamsDescriptor{Name: "user", Type: "string", Default: "x509"},
 			l.ConfigParamsDescriptor{Name: "prefix", Type: "string", Default: "foobar"},
 		},
