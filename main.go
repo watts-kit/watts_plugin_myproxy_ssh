@@ -39,7 +39,7 @@ func request(pi l.Input) l.Output {
 	h.RunSSHCommand("echo", newLine, ">>", authorizedKeyFile)
 
 	credentials := []l.Credential{
-		l.AutoCredential("retrieval host", fmt.Sprintf("%s@%s", pi.Conf["user"], pi.Conf["display_host"])),
+		l.AutoCredential("SSH command to get x509 certificates", fmt.Sprintf("ssh %s@%s", pi.Conf["user"], pi.Conf["display_host"])),
 	}
 
 	// uid as state
