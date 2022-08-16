@@ -48,7 +48,16 @@ func request(pi l.Input) l.Output {
 
 func revoke(pi l.Input) l.Output {
 	h := pi.SSHHostFromConf("user", "host")
-	h.RunSSHCommand("sed", "-i.bak", "/"+pi.CredentialState+"/d", authorizedKeyFile)
+
+	uid := fmt.Sprintf("%s_%s", pi.Conf["prefix"], pi.WaTTSUserID)
+	output, _ := h.RunSSHCommandErr(
+		"grep",
+		fmt.Sprintf("'%s'", uid),
+		authorizedKeyFile)
+	//fmt.Printf("output of grep '%s' %s: '%s'", uid, authorizedKeyFile, output)
+	if output != "" {
+		h.RunSSHCommand("sed", "-i.bak", "/"+pi.CredentialState+"/d", authorizedKeyFile)
+	}
 	return l.PluginGoodRevoke()
 }
 
