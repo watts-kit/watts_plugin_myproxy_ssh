@@ -39,7 +39,7 @@ func request(pi l.Input) l.Output {
 	h.RunSSHCommand("echo", newLine, ">>", authorizedKeyFile)
 
 	credentials := []l.Credential{
-		l.AutoCredential("retrieval host", fmt.Sprintf("%s@%s", pi.Conf["user"], pi.Conf["host"])),
+		l.AutoCredential("retrieval host", fmt.Sprintf("%s@%s", pi.Conf["user"], pi.Conf["display_host"])),
 	}
 
 	// uid as state
@@ -65,6 +65,7 @@ func main() {
 			l.ConfigParamsDescriptor{Name: "script_path", Type: "string", Default: "./getCert"},
 			l.ConfigParamsDescriptor{Name: "host", Type: "string", Default: "watts-x509.data.kit.edu"},
 			l.ConfigParamsDescriptor{Name: "display_host", Type: "string", Default: "watts-x509.data.kit.edu"},
+			l.ConfigParamsDescriptor{Name: "myproxy_server_pwd_key", Type: "string", Default: "empty"},
 			l.ConfigParamsDescriptor{Name: "user", Type: "string", Default: "x509"},
 			l.ConfigParamsDescriptor{Name: "prefix", Type: "string", Default: "foobar"},
 		},
