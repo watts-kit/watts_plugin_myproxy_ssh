@@ -22,14 +22,13 @@ func main() {
 	pwdKey := app.Arg("Password Key", "").Required().String()
 	app.Author("Lukas Burgey")
 	app.Version(version)
+	kingpin.MustParse(app.Parse(os.Args[1:]))
 
-	//password, pwdc_err := passwordclib.GetPassword("myproxy_server_pwd")
 	password, pwdcErr := passwordclib.GetPassword(*pwdKey)
 	if pwdcErr != nil {
-		fmt.Printf("error. The WaTTS admin should add 'myproxy_server_pwd' to passwordd %s", pwdcErr)
+		fmt.Printf("error: The WaTTS admin should add '%s' to passwordd\n", *pwdKey)
 		panic(pwdcErr)
 	}
-	kingpin.MustParse(app.Parse(os.Args[1:]))
 
 	cmd := exec.Command("myproxy-logon", "-l", *wattsUID, "-s", *host, "-S", "-o", "-")
 	//myproxy-logon -l marcus -s watts-myproxy.lifescienceid.org -S-o -
